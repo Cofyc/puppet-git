@@ -53,6 +53,7 @@ define git::repo (
 
   if ! $bare {
     exec { "git_repo_branch_for_${name}":
+      cwd     => $target,
       command => "${git::params::bin} checkout ${branch}",
       unless  => "${git::params::bin} branch | grep -P '\\* ${branch}'",
       require => Exec["git_repo_for_${name}"],
@@ -61,6 +62,7 @@ define git::repo (
 
   if $update {
     exec { "git_update_repo_for_${name}":
+      cwd     => $target,
       user    => $user,
       command => "${git::params::bin} reset --hard origin/${branch}",
       unless  => "${git::params::bin} fetch && ${git::params::bin} diff origin/${branch} --no-color --exit-code",
