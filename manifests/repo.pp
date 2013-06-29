@@ -22,7 +22,9 @@ define git::repo (
   $target,
   $bare    = false,
   $source  = false,
-  $user    = 'root'
+  $user    = 'root',
+  $update  = false,
+  $branch  = 'master',
 ) {
 
   require git::params
@@ -47,5 +49,22 @@ define git::repo (
     creates => $creates,
     require => Class['git::install'],
     user    => $user
+  }
+
+  if ! $bare {
+    exec { "git_repo_branch_for_${name}":
+      command => "${git::params::bin} checkout ${branch}",
+      unless  => "${git::params::bin} branch | grep -P '\\* ${branch}'",
+      require => Exec["git_repo_for_${name}"],
+    }
+  }
+
+  if $update {
+    exec { "git_update_repo_for_${name}":
+      user    => $user,
+      command => "${git::params::bin} reset --hard origin/${branch}",
+      unless  => "${git::params::bin} fetch && ${git::params::bin} diff origin/${branch} --no-color --exit-code",
+      require => Exec["git_repo_for_${name}"],
+    }
   }
 }
